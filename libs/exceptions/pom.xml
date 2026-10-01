@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.example.monorepo.libs</groupId>
+    <artifactId>libs</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>lib-exceptions</artifactId>
+  <name>lib-exceptions</name>
+  <description>
+    Jerarquia de errores de aplicacion y su traduccion a Problem Details
+    (RFC 7807 / RFC 9457). Evita duplicar ExceptionMappers en cada aplicacion.
+
+    Estructura en tres paquetes con proposito distinto:
+      exceptions          -> Java puro. Lo puede usar el DOMINIO.
+      exceptions.problem  -> modelo de representacion del error.
+      exceptions.rest     -> adaptadores JAX-RS. Solo infraestructura.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.example.monorepo.libs</groupId>
+      <artifactId>lib-common-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.example.monorepo.libs</groupId>
+      <artifactId>lib-http</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.ws.rs</groupId>
+      <artifactId>jakarta.ws.rs-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.enterprise</groupId>
+      <artifactId>jakarta.enterprise.cdi-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging</artifactId>
+    </dependency>
+  </dependencies>
+</project>

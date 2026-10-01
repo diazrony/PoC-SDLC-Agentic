@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.example.monorepo.libs</groupId>
+    <artifactId>libs</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>lib-events</artifactId>
+  <name>lib-events</name>
+  <description>
+    Contratos de eventos de integracion compartidos entre productor y
+    consumidores. SOLO estructura, cero logica de negocio.
+    Ver docs/adr/0006-contratos-de-eventos-compartidos.md para la discusion
+    sobre cuando compartir un contrato y cuando NO hacerlo.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.example.monorepo.libs</groupId>
+      <artifactId>lib-common-core</artifactId>
+    </dependency>
+  </dependencies>
+</project>

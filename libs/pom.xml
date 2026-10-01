@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.example.monorepo</groupId>
+    <artifactId>quarkus-enterprise-monorepo</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <!--
+    ============================================================================
+    AGGREGATOR INTERMEDIO: libs
+    ============================================================================
+    Agrupa todas las librerias internas reutilizables.
+
+    Caracteristicas comunes a TODA libreria:
+      * packaging jar "plano" (NO se empaqueta con quarkus-maven-plugin)
+      * se indexa con Jandex para que Quarkus descubra sus beans CDI
+      * NO puede depender de ninguna aplicacion (regla reforzada por Enforcer)
+      * compila contra APIs (jakarta.*) y no contra extensiones Quarkus
+        completas, para no arrastrar runtime innecesario a los consumidores
+    ============================================================================
+  -->
+  <groupId>com.example.monorepo.libs</groupId>
+  <artifactId>libs</artifactId>
+  <packaging>pom</packaging>
+  <name>libs</name>
+  <description>Librerias internas compartidas del monorepo</description>
+
+  <modules>
+    <module>common-core</module>
+    <module>exceptions</module>
+    <module>http</module>
+    <module>observability</module>
+    <module>windows-registry</module>
+    <module>events</module>
+    <module>testing</module>
+  </modules>
+
+  <dependencies>
+    <!-- Toda libreria puede escribir tests unitarios sin volver a declararlo -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!--
+        JANDEX
+        ====
+        Quarkus/ArC solo descubre beans CDI en archivos que contengan un
+        indice Jandex (META-INF/jandex.idx) o un META-INF/beans.xml.
+        Generar el indice en tiempo de build es la opcion recomendada:
+        es mas rapida en arranque y no obliga a los consumidores a declarar
+        quarkus.index-dependency.* en su application.properties.
+
+        Se aplica a todas las librerias por uniformidad; para las que no
+        contienen beans el coste es un fichero de unos pocos KB.
+      -->
+      <plugin>
+        <groupId>io.smallrye</groupId>
+        <artifactId>jandex-maven-plugin</artifactId>
+      </plugin>
+
+      <!--
+        REGLA ARQUITECTONICA: libs -> apps PROHIBIDO
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-libs-do-not-depend-on-apps</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <searchTransitive>true</searchTransitive>
+                  <excludes>
+                    <exclude>com.example.monorepo.apps:*</exclude>
+                  </excludes>
+                  <message>
+                    Violacion arquitectonica: una libreria (libs/) no puede depender
+                    de una aplicacion (apps/). La direccion permitida es apps -> libs.
+                  </message>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

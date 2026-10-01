@@ -1,0 +1,42 @@
+# Build
+target/
+build/
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+
+# Quarkus
+.quarkus/
+*-runner
+*-runner.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+nbproject/
+nb-configuration.xml
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs y temporales
+*.log
+*.hprof
+.flattened-pom.xml
+dependency-reduced-pom.xml
+
+# Secretos: nunca deben llegar al repositorio
+*.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.jks

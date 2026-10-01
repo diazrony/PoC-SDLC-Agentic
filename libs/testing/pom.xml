@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.example.monorepo.libs</groupId>
+    <artifactId>libs</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>lib-testing</artifactId>
+  <name>lib-testing</name>
+  <description>
+    Utilidades de prueba compartidas: reglas ArchUnit, builders y fixtures.
+
+    IMPORTANTE: este modulo NUNCA debe llegar al runtime. Las aplicaciones lo
+    declaran con scope test (ver apps/pom.xml) y el Maven Enforcer rechaza el
+    build si alguien lo declara en compile, runtime o provided.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.example.monorepo.libs</groupId>
+      <artifactId>lib-common-core</artifactId>
+    </dependency>
+
+    <!--
+      Estas dependencias son compile DENTRO de este modulo porque forman parte
+      de su API publica. No contaminan el runtime de nadie porque el modulo
+      completo se consume en scope test.
+    -->
+    <dependency>
+      <groupId>com.tngtech.archunit</groupId>
+      <artifactId>archunit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+</project>

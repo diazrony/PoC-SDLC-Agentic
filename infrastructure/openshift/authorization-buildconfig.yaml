@@ -1,0 +1,32 @@
+# -----------------------------------------------------------------------------
+# BuildConfig de OpenShift para una aplicacion del monorepo.
+#
+# La clave en un monorepo es contextDir: el build apunta a la carpeta de UNA
+# aplicacion, no a la raiz. Combinado con el trigger por ruta, un cambio en
+# apps/transaction no dispara el build de authorization.
+# -----------------------------------------------------------------------------
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: authorization
+  labels:
+    app.kubernetes.io/name: authorization
+spec:
+  source:
+    type: Git
+    git:
+      uri: https://github.com/example-org/quarkus-enterprise-monorepo.git
+      ref: main
+    contextDir: apps/authorization
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: src/main/docker/Dockerfile.jvm
+  output:
+    to:
+      kind: ImageStreamTag
+      name: authorization:latest
+  resources:
+    limits:
+      cpu: "2"
+      memory: 2Gi

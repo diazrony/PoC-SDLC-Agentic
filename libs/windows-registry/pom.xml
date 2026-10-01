@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.example.monorepo.libs</groupId>
+    <artifactId>libs</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>lib-windows-registry</artifactId>
+  <name>lib-windows-registry</name>
+  <description>
+    Acceso al Registro de Windows encapsulado tras una interfaz.
+    Caso de libro de capacidad tecnica transversal, dependiente de plataforma,
+    que NO debe duplicarse en cada aplicacion. La implementacion por defecto
+    es en memoria para que el monorepo compile y testee en cualquier SO.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.example.monorepo.libs</groupId>
+      <artifactId>lib-common-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.enterprise</groupId>
+      <artifactId>jakarta.enterprise.cdi-api</artifactId>
+    </dependency>
+  </dependencies>
+</project>

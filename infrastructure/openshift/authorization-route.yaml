@@ -1,0 +1,25 @@
+# -----------------------------------------------------------------------------
+# Ejemplo de exposicion en OpenShift para una aplicacion.
+# El resto de manifiestos (Deployment, Service, ConfigMap) son los mismos de
+# infrastructure/kubernetes: OpenShift anade Route y, opcionalmente, builds.
+# -----------------------------------------------------------------------------
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: authorization
+  labels:
+    app.kubernetes.io/name: authorization
+    app.kubernetes.io/part-of: quarkus-enterprise-monorepo
+  annotations:
+    haproxy.router.openshift.io/timeout: 30s
+spec:
+  host: authorization.apps.example.com
+  to:
+    kind: Service
+    name: authorization
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

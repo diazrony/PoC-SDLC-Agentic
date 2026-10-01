@@ -1,0 +1,44 @@
+# =============================================================================
+# CODEOWNERS
+# -----------------------------------------------------------------------------
+# En un monorepo la propiedad del codigo NO la da el repositorio: la da la ruta.
+# Este fichero es lo que permite que varios equipos compartan un unico repo sin
+# pisarse: GitHub exige la revision del equipo propietario de cada carpeta
+# tocada por el Pull Request.
+#
+# La ultima regla que coincide con un fichero es la que gana, asi que el orden
+# va de lo mas general a lo mas especifico.
+# =============================================================================
+
+# ------------------------- Propietario por defecto ---------------------------
+*                               @example-org/plataforma
+
+# ------------------------------ Aplicaciones ---------------------------------
+/apps/authorization/            @example-org/equipo-autorizaciones
+/apps/transaction/              @example-org/equipo-transacciones
+/apps/retiros/                  @example-org/equipo-retiros
+/apps/utils/                    @example-org/equipo-plataforma
+/apps/configuration/            @example-org/equipo-plataforma
+/apps/health-clinic/            @example-org/equipo-salud
+
+# -------------------------------- Librerias ----------------------------------
+# Las librerias son codigo compartido: cualquier cambio impacta a varias
+# aplicaciones, por eso las revisa el equipo de arquitectura ademas del dueno.
+/libs/                          @example-org/arquitectura
+/libs/exceptions/               @example-org/arquitectura @example-org/equipo-plataforma
+/libs/events/                   @example-org/arquitectura @example-org/equipo-transacciones
+/libs/windows-registry/         @example-org/equipo-plataforma
+
+# ------------------------------ Infraestructura ------------------------------
+/infrastructure/                @example-org/sre
+/infrastructure/kubernetes/     @example-org/sre @example-org/seguridad
+/infrastructure/openshift/      @example-org/sre
+
+# ----------------------- Build, pipelines y gobierno -------------------------
+/pom.xml                        @example-org/arquitectura
+/apps/pom.xml                   @example-org/arquitectura
+/libs/pom.xml                   @example-org/arquitectura
+/.github/                       @example-org/plataforma @example-org/seguridad
+/.github/CODEOWNERS             @example-org/arquitectura
+/scripts/                       @example-org/plataforma
+/docs/adr/                      @example-org/arquitectura

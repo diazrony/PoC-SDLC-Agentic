@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.example.monorepo</groupId>
+    <artifactId>quarkus-enterprise-monorepo</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <!--
+    ============================================================================
+    AGGREGATOR INTERMEDIO: apps
+    ============================================================================
+    Agrupa todas las aplicaciones desplegables (microservicios Quarkus).
+
+    Aqui se centraliza TODO lo que es identico en las seis aplicaciones:
+      * el stack Quarkus base (REST + Jackson + Panache + H2 + Health)
+      * las librerias transversales del monorepo
+      * la ejecucion de quarkus-maven-plugin (build / generate-code)
+      * las reglas Enforcer propias de una aplicacion
+
+    Consecuencia: el pom.xml de cada app queda minimo y solo declara
+    aquello que REALMENTE la diferencia.
+    ============================================================================
+  -->
+  <groupId>com.example.monorepo.apps</groupId>
+  <artifactId>apps</artifactId>
+  <packaging>pom</packaging>
+  <name>apps</name>
+  <description>Aplicaciones desplegables del monorepo</description>
+
+  <modules>
+    <module>authorization</module>
+    <module>transaction</module>
+    <module>utils</module>
+    <module>configuration</module>
+    <module>health-clinic</module>
+    <module>retiros</module>
+  </modules>
+
+  <dependencies>
+    <!-- ======================= Stack Quarkus base ======================= -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-arc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-rest</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-rest-jackson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-hibernate-orm-panache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-jdbc-h2</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-health</artifactId>
+    </dependency>
+
+    <!-- ============ Librerias transversales del monorepo (apps -> libs) === -->
+    <dependency>
+      <groupId>com.example.monorepo.libs</groupId>
+      <artifactId>lib-exceptions</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.example.monorepo.libs</groupId>
+      <artifactId>lib-http</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.example.monorepo.libs</groupId>
+      <artifactId>lib-observability</artifactId>
+    </dependency>
+
+    <!-- ============================= Testing ============================= -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-junit5</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.rest-assured</groupId>
+      <artifactId>rest-assured</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!--
+      lib-testing SIEMPRE en scope test: nunca debe terminar en el runtime
+      del contenedor. El Enforcer de mas abajo lo verifica.
+    -->
+    <dependency>
+      <groupId>com.example.monorepo.libs</groupId>
+      <artifactId>lib-testing</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!--
+        QUARKUS MAVEN PLUGIN
+        ====
+        Solo se activa en los modulos app: son los unicos artefactos
+        desplegables. Las librerias se quedan como jar plano.
+      -->
+      <plugin>
+        <groupId>${quarkus.platform.group-id}</groupId>
+        <artifactId>quarkus-maven-plugin</artifactId>
+        <extensions>true</extensions>
+        <executions>
+          <execution>
+            <goals>
+              <goal>build</goal>
+              <goal>generate-code</goal>
+              <goal>generate-code-tests</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!--
+        REGLAS ARQUITECTONICAS DE APLICACION
+        ====
+        1) apps -> apps PROHIBIDO (cada microservicio es autonomo).
+        2) lib-testing no puede filtrarse al runtime.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-app-boundaries</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <searchTransitive>true</searchTransitive>
+                  <excludes>
+                    <!-- Ninguna app puede depender de otra app -->
+                    <exclude>com.example.monorepo.apps:*</exclude>
+                    <!-- Utilidades de test fuera del runtime -->
+                    <exclude>com.example.monorepo.libs:lib-testing:*:*:compile</exclude>
+                    <exclude>com.example.monorepo.libs:lib-testing:*:*:runtime</exclude>
+                    <exclude>com.example.monorepo.libs:lib-testing:*:*:provided</exclude>
+                    <exclude>com.tngtech.archunit:archunit:*:*:compile</exclude>
+                    <exclude>com.tngtech.archunit:archunit:*:*:runtime</exclude>
+                  </excludes>
+                  <message>
+                    Violacion arquitectonica. Recuerda:
+                      apps -> libs  PERMITIDO
+                      libs -> libs  PERMITIDO (controlado)
+                      apps -> apps  PROHIBIDO
+                      libs -> apps  PROHIBIDO
+                    Ademas lib-testing y ArchUnit solo pueden usarse en scope test.
+                  </message>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

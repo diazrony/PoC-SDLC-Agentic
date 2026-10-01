@@ -1,0 +1,100 @@
+# -----------------------------------------------------------------------------
+# health-clinic : Deployment + Service + ConfigMap
+# Cada aplicacion tiene su propio manifiesto, su propio numero de replicas y
+# sus propios limites de recursos. Esa es la prueba de que el monorepo no ha
+# creado un monolito.
+# -----------------------------------------------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: health-clinic-config
+  labels:
+    app.kubernetes.io/name: health-clinic
+    app.kubernetes.io/part-of: quarkus-enterprise-monorepo
+data:
+  APP_ENVIRONMENT: "dev"
+  APP_MAX_RESULTS: "50"
+  DB_SCHEMA_GENERATION: "none"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: health-clinic
+  labels:
+    app.kubernetes.io/name: health-clinic
+    app.kubernetes.io/part-of: quarkus-enterprise-monorepo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: health-clinic
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: health-clinic
+    spec:
+      containers:
+        - name: health-clinic
+          image: ghcr.io/example-org/quarkus-enterprise-monorepo/health-clinic:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: health-clinic-config
+          env:
+            # Los secretos NUNCA viven en el repositorio: se montan desde un
+            # Secret gestionado por la plataforma.
+            - name: DB_JDBC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: health-clinic-db
+                  key: jdbc-url
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: health-clinic-db
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: health-clinic-db
+                  key: password
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          startupProbe:
+            httpGet: { path: /q/health/started, port: http }
+            failureThreshold: 20
+            periodSeconds: 3
+          livenessProbe:
+            httpGet: { path: /q/health/live, port: http }
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: { path: /q/health/ready, port: http }
+            periodSeconds: 10
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ "ALL" ]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: health-clinic
+  labels:
+    app.kubernetes.io/name: health-clinic
+spec:
+  selector:
+    app.kubernetes.io/name: health-clinic
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

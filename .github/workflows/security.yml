@@ -1,0 +1,77 @@
+# =============================================================================
+# Seguridad: analisis de dependencias y de codigo.
+#
+# En un monorepo este pipeline tiene una ventaja real: una unica politica de
+# seguridad y un unico inventario de dependencias para todas las aplicaciones.
+# =============================================================================
+name: security
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  MAVEN_ARGS: "-B -ntp"
+
+jobs:
+  dependency-review:
+    name: Revision de dependencias
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+
+  codeql:
+    name: CodeQL (Java)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+
+      - name: Compilar para el analisis
+        run: ./mvnw $MAVEN_ARGS clean compile -DskipTests
+
+      - uses: github/codeql-action/analyze@v3
+
+  sbom:
+    name: SBOM del monorepo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Un unico SBOM agregado: inventario completo en un solo sitio.
+      - name: Generar CycloneDX SBOM
+        run: ./mvnw $MAVEN_ARGS org.cyclonedx:cyclonedx-maven-plugin:2.9.1:makeAggregateBom
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: target/bom.json
+          if-no-files-found: ignore

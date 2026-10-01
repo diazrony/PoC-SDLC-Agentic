@@ -1,0 +1,75 @@
+# =============================================================================
+# Build completo de la rama principal.
+#
+# En las ramas de trabajo se construye solo lo afectado; en main se construye
+# TODO. Es la red de seguridad frente a un calculo de afectados incorrecto.
+# =============================================================================
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    # Build nocturno: detecta roturas por dependencias externas.
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+env:
+  MAVEN_ARGS: "-B -ntp"
+
+jobs:
+  full-build:
+    name: Reactor completo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: clean verify de todo el monorepo
+        run: ./mvnw $MAVEN_ARGS clean verify
+
+      - name: Verificacion de fronteras arquitectonicas
+        run: scripts/verify-architecture.sh
+
+      - name: Publicar informes
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reports
+          path: |
+            **/target/surefire-reports/**
+            **/target/site/jacoco/**
+          if-no-files-found: ignore
+
+  container-images:
+    name: Imagen de ${{ matrix.app }}
+    needs: full-build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      # Monorepo NO es monolito: una imagen independiente por aplicacion.
+      matrix:
+        app: [ authorization, transaction, utils, configuration, health-clinic, retiros ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Construir solo esta aplicacion y sus librerias
+        run: ./mvnw $MAVEN_ARGS -pl apps/${{ matrix.app }} -am package -DskipTests
+
+      - name: Construir la imagen
+        run: |
+          docker build \
+            -f apps/${{ matrix.app }}/src/main/docker/Dockerfile.jvm \
+            -t ghcr.io/${{ github.repository }}/${{ matrix.app }}:${{ github.sha }} \
+            apps/${{ matrix.app }}

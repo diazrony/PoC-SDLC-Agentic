@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.example.monorepo.libs</groupId>
+    <artifactId>libs</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>lib-observability</artifactId>
+  <name>lib-observability</name>
+  <description>
+    Observabilidad transversal: propagacion de traceId/correlationId al MDC,
+    logging estructurado y un interceptor para instrumentar casos de uso.
+    Ejemplo de dependencia controlada libs -> libs (observability -> http).
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.example.monorepo.libs</groupId>
+      <artifactId>lib-common-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.example.monorepo.libs</groupId>
+      <artifactId>lib-http</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.ws.rs</groupId>
+      <artifactId>jakarta.ws.rs-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.enterprise</groupId>
+      <artifactId>jakarta.enterprise.cdi-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.interceptor</groupId>
+      <artifactId>jakarta.interceptor-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging</artifactId>
+    </dependency>
+
+    <!--
+      Solo para LibraryBoundariesTest, que verifica la regla libs -> apps
+      sobre el classpath compartido. Scope test: nunca llega al runtime.
+    -->
+    <dependency>
+      <groupId>com.example.monorepo.libs</groupId>
+      <artifactId>lib-testing</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

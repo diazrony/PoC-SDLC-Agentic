@@ -1,0 +1,160 @@
+# =============================================================================
+# Entorno local completo.
+#
+#   MONOREPO
+#      |
+#      +-- authorization  -> JAR -> Container
+#      +-- transaction    -> JAR -> Container
+#      +-- utils          -> JAR -> Container
+#      +-- configuration  -> JAR -> Container
+#      +-- health-clinic  -> JAR -> Container
+#      +-- retiros        -> JAR -> Container
+#
+# Seis imagenes, seis contenedores, seis ciclos de vida. Monorepo NO es
+# monolito: comparten repositorio y librerias, no proceso ni despliegue.
+#
+# Requisito previo (una sola vez, construye todo el reactor):
+#   ./mvnw clean package -DskipTests
+#
+# Arranque:
+#   docker compose -f infrastructure/docker/docker-compose.yml up --build
+# =============================================================================
+services:
+
+  authorization:
+    build:
+      context: ../../apps/authorization
+      dockerfile: src/main/docker/Dockerfile.jvm
+    image: example/authorization:local
+    container_name: authorization
+    ports:
+      - "8081:8080"
+    environment:
+      APP_ENVIRONMENT: docker
+      APP_MAX_RESULTS: "50"
+      # Cada servicio tiene su propia base de datos: sin esquema compartido
+      # no hay acoplamiento oculto entre microservicios.
+      DB_JDBC_URL: "jdbc:h2:mem:authorization;DB_CLOSE_DELAY=-1"
+      DB_USERNAME: sa
+      DB_SCHEMA_GENERATION: drop-and-create
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health/ready"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  transaction:
+    build:
+      context: ../../apps/transaction
+      dockerfile: src/main/docker/Dockerfile.jvm
+    image: example/transaction:local
+    container_name: transaction
+    ports:
+      - "8082:8080"
+    environment:
+      APP_ENVIRONMENT: docker
+      APP_MAX_RESULTS: "50"
+      # Cada servicio tiene su propia base de datos: sin esquema compartido
+      # no hay acoplamiento oculto entre microservicios.
+      DB_JDBC_URL: "jdbc:h2:mem:transaction;DB_CLOSE_DELAY=-1"
+      DB_USERNAME: sa
+      DB_SCHEMA_GENERATION: drop-and-create
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health/ready"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  utils:
+    build:
+      context: ../../apps/utils
+      dockerfile: src/main/docker/Dockerfile.jvm
+    image: example/utils:local
+    container_name: utils
+    ports:
+      - "8083:8080"
+    environment:
+      APP_ENVIRONMENT: docker
+      APP_MAX_RESULTS: "50"
+      # Cada servicio tiene su propia base de datos: sin esquema compartido
+      # no hay acoplamiento oculto entre microservicios.
+      DB_JDBC_URL: "jdbc:h2:mem:utils;DB_CLOSE_DELAY=-1"
+      DB_USERNAME: sa
+      DB_SCHEMA_GENERATION: drop-and-create
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health/ready"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  configuration:
+    build:
+      context: ../../apps/configuration
+      dockerfile: src/main/docker/Dockerfile.jvm
+    image: example/configuration:local
+    container_name: configuration
+    ports:
+      - "8084:8080"
+    environment:
+      APP_ENVIRONMENT: docker
+      APP_MAX_RESULTS: "50"
+      # Cada servicio tiene su propia base de datos: sin esquema compartido
+      # no hay acoplamiento oculto entre microservicios.
+      DB_JDBC_URL: "jdbc:h2:mem:configuration;DB_CLOSE_DELAY=-1"
+      DB_USERNAME: sa
+      DB_SCHEMA_GENERATION: drop-and-create
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health/ready"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  health-clinic:
+    build:
+      context: ../../apps/health-clinic
+      dockerfile: src/main/docker/Dockerfile.jvm
+    image: example/health-clinic:local
+    container_name: health-clinic
+    ports:
+      - "8085:8080"
+    environment:
+      APP_ENVIRONMENT: docker
+      APP_MAX_RESULTS: "50"
+      # Cada servicio tiene su propia base de datos: sin esquema compartido
+      # no hay acoplamiento oculto entre microservicios.
+      DB_JDBC_URL: "jdbc:h2:mem:health-clinic;DB_CLOSE_DELAY=-1"
+      DB_USERNAME: sa
+      DB_SCHEMA_GENERATION: drop-and-create
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health/ready"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  retiros:
+    build:
+      context: ../../apps/retiros
+      dockerfile: src/main/docker/Dockerfile.jvm
+    image: example/retiros:local
+    container_name: retiros
+    ports:
+      - "8086:8080"
+    environment:
+      APP_ENVIRONMENT: docker
+      APP_MAX_RESULTS: "50"
+      # Cada servicio tiene su propia base de datos: sin esquema compartido
+      # no hay acoplamiento oculto entre microservicios.
+      DB_JDBC_URL: "jdbc:h2:mem:retiros;DB_CLOSE_DELAY=-1"
+      DB_USERNAME: sa
+      DB_SCHEMA_GENERATION: drop-and-create
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health/ready"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
